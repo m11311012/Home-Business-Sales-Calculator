@@ -120,6 +120,7 @@
       padding: 0 12px;
     }
     .search input { border: 0; outline: 0; padding: 11px 0; width: 100%; background: transparent; font-size: 14px; }
+    .search-label { white-space: nowrap; flex: 0 0 auto; font-weight: 700; color: #344054; }
     .panel {
       display: none;
       background: rgba(255,255,255,.86);
@@ -146,7 +147,7 @@
     .pill.warn { background: #fef3c7; color: #92400e; }
     .pill.muted { background: #f2f4f7; color: #667085; }
     .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
-    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
     th {
       position: sticky;
       top: 0;
@@ -159,6 +160,9 @@
       z-index: 1;
     }
     td { padding: 10px; border-bottom: 1px solid #eef2f7; vertical-align: middle; font-size: 14px; }
+    .center { text-align: center; }
+    .center input[type="number"] { text-align: center; }
+    .num { text-align: center; font-variant-numeric: tabular-nums; }
     tr.selected-row { background: #f0f9ff; }
     tr:hover td { background: rgba(37,99,235,.035); }
     input[type="number"], select {
@@ -171,6 +175,11 @@
       font-size: 14px;
     }
     input[type="number"]:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.13); }
+    input[type="number"]:disabled, select:disabled { background: #f8fafc; color: #98a2b3; cursor: not-allowed; }
+    select.mode-select { width: 132px; }
+    input.rate-input { width: 108px; text-align: center; }
+    .calc-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 9px; font-size: 12px; font-weight: 800; background: #ecfeff; color: #155e75; }
+    .calc-chip.hourly { background: #fff7ed; color: #9a3412; }
     .switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
     .switch input { position: absolute; opacity: 0; pointer-events: none; }
     .slider { width: 42px; height: 24px; background: #cbd5e1; border-radius: 999px; position: relative; transition: .18s; }
@@ -245,12 +254,12 @@
       <div class="hero-main">
         <div class="eyebrow">作者 : 威牛燉靈排、身經by戰</div>
         <h1>燕雲家業販售計算器</h1>
-        <p>選用目前備席所賣的菜餚與酒品、輸入備席熟練度、切換 1.2 倍價格後，自動估算至下次更新前的販售數量與各類材料需求。</p>
+        <p>選用目前備席所賣的菜餚與酒品，直接輸入消耗情況，自動估算至下次更新前的販售數量、收入與各類材料需求。</p>
       </div>
       <div class="hero-side">
         <div class="time-card"><div class="label">目前時間</div><div class="big" id="nowText">--</div></div>
         <div class="time-card"><div class="label">下次更新</div><div class="big" id="nextText">--</div></div>
-        <div class="time-card wide"><div class="label">剩餘小時</div><div class="big"><span id="hoursText">--</span> 小時</div><div class="small">可使用自動時間，也可以手動覆寫剩餘小時。</div></div>
+        <div class="time-card wide"><div class="label">距離熱門菜更新時間還有</div><div class="big"><span id="hoursText">--</span> 小時</div><div class="small">可使用自動時間，也可以手動覆寫剩餘小時。</div></div>
       </div>
     </header>
 
@@ -260,10 +269,10 @@
         <button class="tab" data-tab="foods">菜餚設定</button>
         <button class="tab" data-tab="drinks">酒品設定</button>
         <button class="tab" data-tab="details">材料明細</button>
-        <button class="tab" data-tab="formulas">公式說明</button>
+        <button class="tab" data-tab="formulas">使用說明</button>
       </div>
       <div class="spacer"></div>
-      <div class="search"><span>搜尋</span><input id="globalSearch" placeholder="品名、材料、類別..." /></div>
+      <div class="search"><span class="search-label">搜尋：</span><input id="globalSearch" placeholder="輸入品名、材料或類別" /></div>
     </div>
 
     <section id="overview" class="panel active">
@@ -281,6 +290,7 @@
         <button class="warn" id="exportCsvBtn">匯出結果 CSV</button>
         <button class="ghost" onclick="window.print()">列印/另存 PDF</button>
       </div>
+      <div class="note" style="margin-bottom:16px"><strong>計算方式：</strong>每個品項只需要填「消耗情況」，也就是每小時大約會賣掉幾份。系統會依照剩餘時間，自動整理總販售量與材料需求。</div>
       <div class="section-title"><h2>已選販售品項</h2><span class="muted" id="selectedHint"></span></div>
       <div id="selectedCards" class="cards"></div>
       <div class="section-title" style="margin-top:22px"><h2>材料需求彙總</h2><span class="muted">依種田、捕魚、狩獵、伐木、挖礦、瓷器分組</span></div>
@@ -288,7 +298,7 @@
     </section>
 
     <section id="foods" class="panel">
-      <div class="section-title"><h2>菜餚設定</h2><span class="muted">勾選選用並輸入備席熟練度</span></div>
+      <div class="section-title"><h2>菜餚設定</h2><span class="muted">勾選選用，直接輸入消耗情況</span></div>
       <div class="controls">
         <button class="primary" data-select-kind="菜餚" data-action="selectAll">菜餚全選</button>
         <button class="ghost" data-select-kind="菜餚" data-action="clearAll">菜餚全取消</button>
@@ -315,12 +325,12 @@
     </section>
 
     <section id="formulas" class="panel">
-      <div class="section-title"><h2>公式說明</h2><span class="muted">由原 Excel 公式轉為 JavaScript 計算</span></div>
-      <div class="note">資料來源：<strong>燕雲家業販售計算.xlsx</strong>；工作表：Sheet1、菜、酒。此網頁是單檔離線版，不需要安裝 Excel，也不會上傳資料。</div>
+      <div class="section-title"><h2>使用說明</h2><span class="muted">用簡單方式快速完成計算</span></div>
+      <div class="note"><strong>這個版本是給一般使用者操作的每小時單純版。</strong><br>你只需要勾選要販售的品項、輸入消耗情況，系統就會依照目前距離下次更新的剩餘時間，自動幫你算出總販售量、收入估算與材料需求。整個網頁可離線使用，不需要安裝 Excel，也不會上傳資料。</div>
       <div id="formulaList" class="formula-list" style="margin-top:14px"></div>
     </section>
 
-    <div class="footer">燕雲家業販售計算器 · 單檔 HTML · 可離線使用</div>
+    <div class="footer">燕雲家業販售計算器 · 每小時單純版 · 單檔 HTML · 可離線使用</div>
   </div>
 
   <div id="modalBackdrop" class="modal-backdrop">
@@ -332,9 +342,8 @@
   <div id="toast" class="toast">已完成</div>
 
   <script>
-    const APP_DATA = {"sourceFile":"燕雲家業販售計算.xlsx","generatedFromSheets":["Sheet1","菜","酒"],"consumeRate":0.009,"baseUpdateDate":"2026-07-06","updateWeekday":1,"updateHour":9,"recipes":[{"id":"菜-7","kind":"菜餚","sheet":"菜","row":7,"selected":false,"boost":false,"level":10,"name":"豆酥","basePrice":87.0,"proficiency":0.0,"ingredients":[{"name":"大豆","qty":6.0,"category":"種田","level":3,"source":"菜!W7"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ7"},{"name":"鯰魚","qty":2.0,"category":"捕魚","level":10,"source":"菜!AY7"}]},{"id":"菜-8","kind":"菜餚","sheet":"菜","row":8,"selected":false,"boost":false,"level":10,"name":"野鴇","basePrice":87.0,"proficiency":0.0,"ingredients":[{"name":"黃瓜","qty":6.0,"category":"種田","level":7,"source":"菜!AO8"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ8"},{"name":"野鴇","qty":2.0,"category":"狩獵","level":4,"source":"菜!CA8"}]},{"id":"菜-9","kind":"菜餚","sheet":"菜","row":9,"selected":false,"boost":false,"level":10,"name":"番茄","basePrice":87.0,"proficiency":0.0,"ingredients":[{"name":"番茄","qty":6.0,"category":"種田","level":5,"source":"菜!AI9"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ9"},{"name":"兔肉","qty":2.0,"category":"狩獵","level":9,"source":"菜!BU9"}]},{"id":"菜-10","kind":"菜餚","sheet":"菜","row":10,"selected":false,"boost":false,"level":10,"name":"鯚魚","basePrice":87.0,"proficiency":0.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ10"},{"name":"生菜","qty":6.0,"category":"種田","level":9,"source":"菜!AU10"},{"name":"鯚魚","qty":2.0,"category":"捕魚","level":6,"source":"菜!BG10"}]},{"id":"菜-11","kind":"菜餚","sheet":"菜","row":11,"selected":false,"boost":false,"level":9,"name":"香烤","basePrice":84.0,"proficiency":0.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ11"},{"name":"生菜","qty":6.0,"category":"種田","level":9,"source":"菜!AU11"},{"name":"兔肉","qty":2.0,"category":"狩獵","level":9,"source":"菜!BU11"}]},{"id":"菜-12","kind":"菜餚","sheet":"菜","row":12,"selected":false,"boost":false,"level":9,"name":"茶辣","basePrice":84.0,"proficiency":0.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ12"},{"name":"茶樹","qty":6.0,"category":"種田","level":9,"source":"菜!AW12"},{"name":"鯽魚","qty":2.0,"category":"捕魚","level":9,"source":"菜!BA12"}]},{"id":"菜-13","kind":"菜餚","sheet":"菜","row":13,"selected":false,"boost":false,"level":9,"name":"辣拌","basePrice":84.0,"proficiency":0.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ13"},{"name":"生菜","qty":6.0,"category":"種田","level":9,"source":"菜!AU13"},{"name":"蕈菇","qty":2.0,"category":"伐木","level":6,"source":"菜!CI13"}]},{"id":"菜-14","kind":"菜餚","sheet":"菜","row":14,"selected":false,"boost":false,"level":9,"name":"香辣","basePrice":84.0,"proficiency":0.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ14"},{"name":"茶樹","qty":6.0,"category":"種田","level":9,"source":"菜!AW14"},{"name":"大麋","qty":2.0,"category":"狩獵","level":3,"source":"菜!CC14"}]},{"id":"菜-15","kind":"菜餚","sheet":"菜","row":15,"selected":false,"boost":false,"level":8,"name":"參炒","basePrice":81.0,"proficiency":0.0,"ingredients":[{"name":"胡蘿蔔","qty":6.0,"category":"種田","level":2,"source":"菜!S15"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ15"},{"name":"野山參","qty":2.0,"category":"伐木","level":8,"source":"菜!CK15"}]},{"id":"菜-16","kind":"菜餚","sheet":"菜","row":16,"selected":false,"boost":false,"level":8,"name":"馬鈴薯","basePrice":81.0,"proficiency":0.0,"ingredients":[{"name":"馬鈴薯","qty":6.0,"category":"種田","level":1,"source":"菜!M16"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ16"},{"name":"鯉魚","qty":2.0,"category":"捕魚","level":8,"source":"菜!BC16"}]},{"id":"菜-17","kind":"菜餚","sheet":"菜","row":17,"selected":false,"boost":false,"level":8,"name":"山參","basePrice":81.0,"proficiency":0.0,"ingredients":[{"name":"茄子","qty":6.0,"category":"種田","level":4,"source":"菜!AC17"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ17"},{"name":"野山參","qty":2.0,"category":"伐木","level":8,"source":"菜!CK17"}]},{"id":"菜-18","kind":"菜餚","sheet":"菜","row":18,"selected":false,"boost":false,"level":8,"name":"辣炙","basePrice":81.0,"proficiency":0.0,"ingredients":[{"name":"洋蔥","qty":6.0,"category":"種田","level":6,"source":"菜!AM18"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ18"},{"name":"鯉魚","qty":2.0,"category":"捕魚","level":8,"source":"菜!BC18"}]},{"id":"菜-19","kind":"菜餚","sheet":"菜","row":19,"selected":true,"boost":true,"level":7,"name":"桃脯","basePrice":78.0,"proficiency":105.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ19"},{"name":"桃子","qty":6.0,"category":"種田","level":7,"source":"菜!AS19"},{"name":"豬肉","qty":2.0,"category":"狩獵","level":7,"source":"菜!BW19"}]},{"id":"菜-20","kind":"菜餚","sheet":"菜","row":20,"selected":false,"boost":false,"level":7,"name":"紫茄","basePrice":78.0,"proficiency":0.0,"ingredients":[{"name":"茄子","qty":6.0,"category":"種田","level":4,"source":"菜!AC20"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ20"},{"name":"河豚","qty":2.0,"category":"捕魚","level":7,"source":"菜!BE20"}]},{"id":"菜-21","kind":"菜餚","sheet":"菜","row":21,"selected":false,"boost":false,"level":7,"name":"辣子","basePrice":78.0,"proficiency":0.0,"ingredients":[{"name":"小麥","qty":6.0,"category":"種田","level":1,"source":"菜!Q21"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ21"},{"name":"豬肉","qty":2.0,"category":"狩獵","level":7,"source":"菜!BW21"}]},{"id":"菜-22","kind":"菜餚","sheet":"菜","row":22,"selected":false,"boost":false,"level":7,"name":"河豚","basePrice":78.0,"proficiency":0.0,"ingredients":[{"name":"黃瓜","qty":6.0,"category":"種田","level":7,"source":"菜!AO22"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ22"},{"name":"河豚","qty":2.0,"category":"捕魚","level":7,"source":"菜!BE22"}]},{"id":"菜-23","kind":"菜餚","sheet":"菜","row":23,"selected":false,"boost":false,"level":6,"name":"洋蔥蒸","basePrice":75.0,"proficiency":0.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE23"},{"name":"洋蔥","qty":6.0,"category":"種田","level":6,"source":"菜!AM23"},{"name":"鯚魚","qty":2.0,"category":"捕魚","level":6,"source":"菜!BG23"}]},{"id":"菜-24","kind":"菜餚","sheet":"菜","row":24,"selected":false,"boost":false,"level":6,"name":"洋蔥燉","basePrice":75.0,"proficiency":0.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE24"},{"name":"洋蔥","qty":6.0,"category":"種田","level":6,"source":"菜!AM24"},{"name":"吠鹿","qty":2.0,"category":"狩獵","level":5,"source":"菜!BY24"}]},{"id":"菜-25","kind":"菜餚","sheet":"菜","row":25,"selected":false,"boost":false,"level":6,"name":"麋肉","basePrice":75.0,"proficiency":0.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE25"},{"name":"寒瓜","qty":6.0,"category":"種田","level":4,"source":"菜!AG25"},{"name":"大麋","qty":2.0,"category":"狩獵","level":3,"source":"菜!CC25"}]},{"id":"菜-26","kind":"菜餚","sheet":"菜","row":26,"selected":false,"boost":false,"level":6,"name":"蕈菇","basePrice":75.0,"proficiency":0.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE26"},{"name":"油菜","qty":6.0,"category":"種田","level":5,"source":"菜!AK26"},{"name":"蕈菇","qty":2.0,"category":"伐木","level":6,"source":"菜!CI26"}]},{"id":"菜-27","kind":"菜餚","sheet":"菜","row":27,"selected":false,"boost":false,"level":5,"name":"番茄燴","basePrice":72.0,"proficiency":0.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE27"},{"name":"番茄","qty":6.0,"category":"種田","level":5,"source":"菜!AI27"},{"name":"吠鹿","qty":2.0,"category":"狩獵","level":5,"source":"菜!BY27"}]},{"id":"菜-28","kind":"菜餚","sheet":"菜","row":28,"selected":false,"boost":false,"level":5,"name":"番茄魚","basePrice":72.0,"proficiency":0.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE28"},{"name":"番茄","qty":6.0,"category":"種田","level":5,"source":"菜!AI28"},{"name":"洛口","qty":2.0,"category":"捕魚","level":5,"source":"菜!BI28"}]},{"id":"菜-29","kind":"菜餚","sheet":"菜","row":29,"selected":false,"boost":false,"level":5,"name":"梨蒜","basePrice":72.0,"proficiency":0.0,"ingredients":[{"name":"梨花","qty":6.0,"category":"種田","level":2,"source":"菜!U29"},{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE29"},{"name":"鳙魚","qty":2.0,"category":"捕魚","level":5,"source":"菜!BK29"}]},{"id":"菜-30","kind":"菜餚","sheet":"菜","row":30,"selected":false,"boost":false,"level":5,"name":"鴇片","basePrice":72.0,"proficiency":0.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE30"},{"name":"油菜","qty":6.0,"category":"種田","level":5,"source":"菜!AK30"},{"name":"野鴇","qty":2.0,"category":"狩獵","level":4,"source":"菜!CA30"}]},{"id":"酒-7","kind":"酒","sheet":"酒","row":7,"selected":false,"boost":false,"level":10,"name":"屠蘇","basePrice":0.0,"proficiency":0.0,"ingredients":[{"name":"高粱","qty":3.0,"category":"種田","level":7,"source":"酒!AA7"},{"name":"櫻桃","qty":6.0,"category":"種田","level":10,"source":"酒!AI7"},{"name":"描金","qty":1.0,"category":"瓷器","level":10,"source":"酒!AM7"},{"name":"寒鐵","qty":1.0,"category":"挖礦","level":8,"source":"酒!AO7"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA7"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC7"}]},{"id":"酒-8","kind":"酒","sheet":"酒","row":8,"selected":false,"boost":false,"level":9,"name":"松醪","basePrice":0.0,"proficiency":0.0,"ingredients":[{"name":"高粱","qty":3.0,"category":"種田","level":7,"source":"酒!AA8"},{"name":"茶樹","qty":6.0,"category":"種田","level":9,"source":"酒!AG8"},{"name":"三彩","qty":1.0,"category":"瓷器","level":9,"source":"酒!AM8"},{"name":"寒鐵","qty":1.0,"category":"挖礦","level":8,"source":"酒!AO8"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA8"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC8"}]},{"id":"酒-9","kind":"酒","sheet":"酒","row":9,"selected":false,"boost":false,"level":8,"name":"鵝黃","basePrice":0.0,"proficiency":0.0,"ingredients":[{"name":"高粱","qty":3.0,"category":"種田","level":7,"source":"酒!AA9"},{"name":"枇杷","qty":6.0,"category":"種田","level":8,"source":"酒!AE9"},{"name":"藍釉","qty":1.0,"category":"瓷器","level":8,"source":"酒!AM9"},{"name":"寒鐵","qty":1.0,"category":"挖礦","level":8,"source":"酒!AO9"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA9"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC9"}]},{"id":"酒-10","kind":"酒","sheet":"酒","row":10,"selected":true,"boost":true,"level":7,"name":"杜康","basePrice":86.0,"proficiency":683.0,"ingredients":[{"name":"高粱","qty":3.0,"category":"種田","level":7,"source":"酒!AA10"},{"name":"甘蔗","qty":6.0,"category":"種田","level":7,"source":"酒!AC10"},{"name":"陶胎","qty":1.0,"category":"瓷器","level":7,"source":"酒!AM10"},{"name":"黃銅","qty":1.0,"category":"挖礦","level":6,"source":"酒!AQ10"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA10"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC10"}]},{"id":"酒-11","kind":"酒","sheet":"酒","row":11,"selected":false,"boost":false,"level":6,"name":"青紅","basePrice":83.0,"proficiency":0.0,"ingredients":[{"name":"水稻","qty":3.0,"category":"種田","level":4,"source":"酒!S11"},{"name":"番茄","qty":6.0,"category":"種田","level":5,"source":"酒!W11"},{"name":"青黃","qty":1.0,"category":"瓷器","level":6,"source":"酒!AM11"},{"name":"黃銅","qty":1.0,"category":"挖礦","level":6,"source":"酒!AQ11"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA11"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC11"}]},{"id":"酒-12","kind":"酒","sheet":"酒","row":12,"selected":false,"boost":false,"level":5,"name":"新豐","basePrice":79.0,"proficiency":0.0,"ingredients":[{"name":"水稻","qty":3.0,"category":"種田","level":4,"source":"酒!S12"},{"name":"油菜","qty":6.0,"category":"種田","level":5,"source":"酒!Y12"},{"name":"青瓷","qty":1.0,"category":"瓷器","level":5,"source":"酒!AM12"},{"name":"青礞","qty":1.0,"category":"挖礦","level":5,"source":"酒!AS12"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA12"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC12"}]},{"id":"酒-13","kind":"酒","sheet":"酒","row":13,"selected":false,"boost":false,"level":4,"name":"瓜果","basePrice":0.0,"proficiency":0.0,"ingredients":[{"name":"水稻","qty":3.0,"category":"種田","level":4,"source":"酒!S13"},{"name":"寒瓜","qty":6.0,"category":"種田","level":4,"source":"酒!U13"},{"name":"青釉","qty":1.0,"category":"瓷器","level":4,"source":"酒!AM13"},{"name":"獨山","qty":1.0,"category":"挖礦","level":4,"source":"酒!AU13"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA13"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC13"}]},{"id":"酒-14","kind":"酒","sheet":"酒","row":14,"selected":false,"boost":false,"level":3,"name":"桑落","basePrice":0.0,"proficiency":0.0,"ingredients":[{"name":"玉米","qty":3.0,"category":"種田","level":1,"source":"酒!K14"},{"name":"棉花","qty":6.0,"category":"種田","level":3,"source":"酒!Q14"},{"name":"藍玉","qty":1.0,"category":"瓷器","level":3,"source":"酒!AM14"},{"name":"獨山藍","qty":1.0,"category":"挖礦","level":3,"source":"酒!AW14"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA14"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC14"}]},{"id":"酒-15","kind":"酒","sheet":"酒","row":15,"selected":false,"boost":false,"level":2,"name":"包穀","basePrice":69.0,"proficiency":0.0,"ingredients":[{"name":"玉米","qty":3.0,"category":"種田","level":1,"source":"酒!K15"},{"name":"梨花","qty":6.0,"category":"種田","level":2,"source":"酒!O15"},{"name":"白釉","qty":1.0,"category":"瓷器","level":2,"source":"酒!AM15"},{"name":"酒香","qty":1.0,"category":"挖礦","level":2,"source":"酒!AY15"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA15"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC15"}]},{"id":"酒-16","kind":"酒","sheet":"酒","row":16,"selected":false,"boost":false,"level":1,"name":"麥酒","basePrice":66.0,"proficiency":0.0,"ingredients":[{"name":"玉米","qty":3.0,"category":"種田","level":1,"source":"酒!K16"},{"name":"小麥","qty":6.0,"category":"種田","level":1,"source":"酒!M16"},{"name":"木理","qty":1.0,"category":"瓷器","level":1,"source":"酒!AM16"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA16"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC16"}]}],"categoryOrder":["菜餚","酒","種田","捕魚","狩獵","伐木","挖礦","瓷器","其他"],"formulaNotes":[{"title":"下次更新時間","text":"以 2026/07/06 為基準，每週一 09:00 更新。網頁會依使用者電腦時間自動計算，也可手動覆寫剩餘小時。"},{"title":"預計販售量","text":"若選用該品項：備席熟練度 × 0.009 × 剩餘小時；未選用則為 0。"},{"title":"材料需求量","text":"若選用該品項：ROUNDUP(備席熟練度 × 0.009 × 剩餘小時 × 單份材料數量, 0)。多個品項共用材料時，先逐品項無條件進位後再加總。"},{"title":"1.2 倍價格","text":"若勾選 1.2 倍：ROUND(原價 × 1.2, 0)；未勾選則使用原價。"}]};
-    const RATE = APP_DATA.consumeRate;
-    const STORAGE_KEY = 'yanyun_sale_calc_state_v1';
+    const APP_DATA = {"sourceFile":"燕雲家業販售計算.xlsx","generatedFromSheets":["Sheet1","菜","酒"],"baseUpdateDate":"2026-07-06","updateWeekday":1,"updateHour":9,"recipes":[{"id":"菜-7","kind":"菜餚","sheet":"菜","row":7,"selected":false,"boost":false,"level":10,"name":"豆酥","basePrice":87.0,"ingredients":[{"name":"大豆","qty":6.0,"category":"種田","level":3,"source":"菜!W7"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ7"},{"name":"鯰魚","qty":2.0,"category":"捕魚","level":10,"source":"菜!AY7"}],"hourlyRate":0.0},{"id":"菜-8","kind":"菜餚","sheet":"菜","row":8,"selected":false,"boost":false,"level":10,"name":"野鴇","basePrice":87.0,"ingredients":[{"name":"黃瓜","qty":6.0,"category":"種田","level":7,"source":"菜!AO8"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ8"},{"name":"野鴇","qty":2.0,"category":"狩獵","level":4,"source":"菜!CA8"}],"hourlyRate":0.0},{"id":"菜-9","kind":"菜餚","sheet":"菜","row":9,"selected":false,"boost":false,"level":10,"name":"番茄","basePrice":87.0,"ingredients":[{"name":"番茄","qty":6.0,"category":"種田","level":5,"source":"菜!AI9"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ9"},{"name":"兔肉","qty":2.0,"category":"狩獵","level":9,"source":"菜!BU9"}],"hourlyRate":0.0},{"id":"菜-10","kind":"菜餚","sheet":"菜","row":10,"selected":false,"boost":false,"level":10,"name":"鯚魚","basePrice":87.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ10"},{"name":"生菜","qty":6.0,"category":"種田","level":9,"source":"菜!AU10"},{"name":"鯚魚","qty":2.0,"category":"捕魚","level":6,"source":"菜!BG10"}],"hourlyRate":0.0},{"id":"菜-11","kind":"菜餚","sheet":"菜","row":11,"selected":false,"boost":false,"level":9,"name":"香烤","basePrice":84.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ11"},{"name":"生菜","qty":6.0,"category":"種田","level":9,"source":"菜!AU11"},{"name":"兔肉","qty":2.0,"category":"狩獵","level":9,"source":"菜!BU11"}],"hourlyRate":0.0},{"id":"菜-12","kind":"菜餚","sheet":"菜","row":12,"selected":false,"boost":false,"level":9,"name":"茶辣","basePrice":84.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ12"},{"name":"茶樹","qty":6.0,"category":"種田","level":9,"source":"菜!AW12"},{"name":"鯽魚","qty":2.0,"category":"捕魚","level":9,"source":"菜!BA12"}],"hourlyRate":0.0},{"id":"菜-13","kind":"菜餚","sheet":"菜","row":13,"selected":false,"boost":false,"level":9,"name":"辣拌","basePrice":84.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ13"},{"name":"生菜","qty":6.0,"category":"種田","level":9,"source":"菜!AU13"},{"name":"蕈菇","qty":2.0,"category":"伐木","level":6,"source":"菜!CI13"}],"hourlyRate":0.0},{"id":"菜-14","kind":"菜餚","sheet":"菜","row":14,"selected":false,"boost":false,"level":9,"name":"香辣","basePrice":84.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ14"},{"name":"茶樹","qty":6.0,"category":"種田","level":9,"source":"菜!AW14"},{"name":"大麋","qty":2.0,"category":"狩獵","level":3,"source":"菜!CC14"}],"hourlyRate":0.0},{"id":"菜-15","kind":"菜餚","sheet":"菜","row":15,"selected":false,"boost":false,"level":8,"name":"參炒","basePrice":81.0,"ingredients":[{"name":"胡蘿蔔","qty":6.0,"category":"種田","level":2,"source":"菜!S15"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ15"},{"name":"野山參","qty":2.0,"category":"伐木","level":8,"source":"菜!CK15"}],"hourlyRate":0.0},{"id":"菜-16","kind":"菜餚","sheet":"菜","row":16,"selected":false,"boost":false,"level":8,"name":"馬鈴薯","basePrice":81.0,"ingredients":[{"name":"馬鈴薯","qty":6.0,"category":"種田","level":1,"source":"菜!M16"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ16"},{"name":"鯉魚","qty":2.0,"category":"捕魚","level":8,"source":"菜!BC16"}],"hourlyRate":0.0},{"id":"菜-17","kind":"菜餚","sheet":"菜","row":17,"selected":false,"boost":false,"level":8,"name":"山參","basePrice":81.0,"ingredients":[{"name":"茄子","qty":6.0,"category":"種田","level":4,"source":"菜!AC17"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ17"},{"name":"野山參","qty":2.0,"category":"伐木","level":8,"source":"菜!CK17"}],"hourlyRate":0.0},{"id":"菜-18","kind":"菜餚","sheet":"菜","row":18,"selected":false,"boost":false,"level":8,"name":"辣炙","basePrice":81.0,"ingredients":[{"name":"洋蔥","qty":6.0,"category":"種田","level":6,"source":"菜!AM18"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ18"},{"name":"鯉魚","qty":2.0,"category":"捕魚","level":8,"source":"菜!BC18"}],"hourlyRate":0.0},{"id":"菜-19","kind":"菜餚","sheet":"菜","row":19,"selected":true,"boost":true,"level":7,"name":"桃脯","basePrice":78.0,"ingredients":[{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ19"},{"name":"桃子","qty":6.0,"category":"種田","level":7,"source":"菜!AS19"},{"name":"豬肉","qty":2.0,"category":"狩獵","level":7,"source":"菜!BW19"}],"hourlyRate":0.945},{"id":"菜-20","kind":"菜餚","sheet":"菜","row":20,"selected":false,"boost":false,"level":7,"name":"紫茄","basePrice":78.0,"ingredients":[{"name":"茄子","qty":6.0,"category":"種田","level":4,"source":"菜!AC20"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ20"},{"name":"河豚","qty":2.0,"category":"捕魚","level":7,"source":"菜!BE20"}],"hourlyRate":0.0},{"id":"菜-21","kind":"菜餚","sheet":"菜","row":21,"selected":false,"boost":false,"level":7,"name":"辣子","basePrice":78.0,"ingredients":[{"name":"小麥","qty":6.0,"category":"種田","level":1,"source":"菜!Q21"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ21"},{"name":"豬肉","qty":2.0,"category":"狩獵","level":7,"source":"菜!BW21"}],"hourlyRate":0.0},{"id":"菜-22","kind":"菜餚","sheet":"菜","row":22,"selected":false,"boost":false,"level":7,"name":"河豚","basePrice":78.0,"ingredients":[{"name":"黃瓜","qty":6.0,"category":"種田","level":7,"source":"菜!AO22"},{"name":"辣椒","qty":3.0,"category":"種田","level":7,"source":"菜!AQ22"},{"name":"河豚","qty":2.0,"category":"捕魚","level":7,"source":"菜!BE22"}],"hourlyRate":0.0},{"id":"菜-23","kind":"菜餚","sheet":"菜","row":23,"selected":false,"boost":false,"level":6,"name":"洋蔥蒸","basePrice":75.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE23"},{"name":"洋蔥","qty":6.0,"category":"種田","level":6,"source":"菜!AM23"},{"name":"鯚魚","qty":2.0,"category":"捕魚","level":6,"source":"菜!BG23"}],"hourlyRate":0.0},{"id":"菜-24","kind":"菜餚","sheet":"菜","row":24,"selected":false,"boost":false,"level":6,"name":"洋蔥燉","basePrice":75.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE24"},{"name":"洋蔥","qty":6.0,"category":"種田","level":6,"source":"菜!AM24"},{"name":"吠鹿","qty":2.0,"category":"狩獵","level":5,"source":"菜!BY24"}],"hourlyRate":0.0},{"id":"菜-25","kind":"菜餚","sheet":"菜","row":25,"selected":false,"boost":false,"level":6,"name":"麋肉","basePrice":75.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE25"},{"name":"寒瓜","qty":6.0,"category":"種田","level":4,"source":"菜!AG25"},{"name":"大麋","qty":2.0,"category":"狩獵","level":3,"source":"菜!CC25"}],"hourlyRate":0.0},{"id":"菜-26","kind":"菜餚","sheet":"菜","row":26,"selected":false,"boost":false,"level":6,"name":"蕈菇","basePrice":75.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE26"},{"name":"油菜","qty":6.0,"category":"種田","level":5,"source":"菜!AK26"},{"name":"蕈菇","qty":2.0,"category":"伐木","level":6,"source":"菜!CI26"}],"hourlyRate":0.0},{"id":"菜-27","kind":"菜餚","sheet":"菜","row":27,"selected":false,"boost":false,"level":5,"name":"番茄燴","basePrice":72.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE27"},{"name":"番茄","qty":6.0,"category":"種田","level":5,"source":"菜!AI27"},{"name":"吠鹿","qty":2.0,"category":"狩獵","level":5,"source":"菜!BY27"}],"hourlyRate":0.0},{"id":"菜-28","kind":"菜餚","sheet":"菜","row":28,"selected":false,"boost":false,"level":5,"name":"番茄魚","basePrice":72.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE28"},{"name":"番茄","qty":6.0,"category":"種田","level":5,"source":"菜!AI28"},{"name":"洛口","qty":2.0,"category":"捕魚","level":5,"source":"菜!BI28"}],"hourlyRate":0.0},{"id":"菜-29","kind":"菜餚","sheet":"菜","row":29,"selected":false,"boost":false,"level":5,"name":"梨蒜","basePrice":72.0,"ingredients":[{"name":"梨花","qty":6.0,"category":"種田","level":2,"source":"菜!U29"},{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE29"},{"name":"鳙魚","qty":2.0,"category":"捕魚","level":5,"source":"菜!BK29"}],"hourlyRate":0.0},{"id":"菜-30","kind":"菜餚","sheet":"菜","row":30,"selected":false,"boost":false,"level":5,"name":"鴇片","basePrice":72.0,"ingredients":[{"name":"大蒜","qty":3.0,"category":"種田","level":4,"source":"菜!AE30"},{"name":"油菜","qty":6.0,"category":"種田","level":5,"source":"菜!AK30"},{"name":"野鴇","qty":2.0,"category":"狩獵","level":4,"source":"菜!CA30"}],"hourlyRate":0.0},{"id":"酒-7","kind":"酒","sheet":"酒","row":7,"selected":false,"boost":false,"level":10,"name":"屠蘇","basePrice":0.0,"ingredients":[{"name":"高粱","qty":3.0,"category":"種田","level":7,"source":"酒!AA7"},{"name":"櫻桃","qty":6.0,"category":"種田","level":10,"source":"酒!AI7"},{"name":"描金","qty":1.0,"category":"瓷器","level":10,"source":"酒!AM7"},{"name":"寒鐵","qty":1.0,"category":"挖礦","level":8,"source":"酒!AO7"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA7"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC7"}],"hourlyRate":0.0},{"id":"酒-8","kind":"酒","sheet":"酒","row":8,"selected":false,"boost":false,"level":9,"name":"松醪","basePrice":0.0,"ingredients":[{"name":"高粱","qty":3.0,"category":"種田","level":7,"source":"酒!AA8"},{"name":"茶樹","qty":6.0,"category":"種田","level":9,"source":"酒!AG8"},{"name":"三彩","qty":1.0,"category":"瓷器","level":9,"source":"酒!AM8"},{"name":"寒鐵","qty":1.0,"category":"挖礦","level":8,"source":"酒!AO8"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA8"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC8"}],"hourlyRate":0.0},{"id":"酒-9","kind":"酒","sheet":"酒","row":9,"selected":false,"boost":false,"level":8,"name":"鵝黃","basePrice":0.0,"ingredients":[{"name":"高粱","qty":3.0,"category":"種田","level":7,"source":"酒!AA9"},{"name":"枇杷","qty":6.0,"category":"種田","level":8,"source":"酒!AE9"},{"name":"藍釉","qty":1.0,"category":"瓷器","level":8,"source":"酒!AM9"},{"name":"寒鐵","qty":1.0,"category":"挖礦","level":8,"source":"酒!AO9"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA9"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC9"}],"hourlyRate":0.0},{"id":"酒-10","kind":"酒","sheet":"酒","row":10,"selected":true,"boost":true,"level":7,"name":"杜康","basePrice":86.0,"ingredients":[{"name":"高粱","qty":3.0,"category":"種田","level":7,"source":"酒!AA10"},{"name":"甘蔗","qty":6.0,"category":"種田","level":7,"source":"酒!AC10"},{"name":"陶胎","qty":1.0,"category":"瓷器","level":7,"source":"酒!AM10"},{"name":"黃銅","qty":1.0,"category":"挖礦","level":6,"source":"酒!AQ10"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA10"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC10"}],"hourlyRate":6.147},{"id":"酒-11","kind":"酒","sheet":"酒","row":11,"selected":false,"boost":false,"level":6,"name":"青紅","basePrice":83.0,"ingredients":[{"name":"水稻","qty":3.0,"category":"種田","level":4,"source":"酒!S11"},{"name":"番茄","qty":6.0,"category":"種田","level":5,"source":"酒!W11"},{"name":"青黃","qty":1.0,"category":"瓷器","level":6,"source":"酒!AM11"},{"name":"黃銅","qty":1.0,"category":"挖礦","level":6,"source":"酒!AQ11"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA11"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC11"}],"hourlyRate":0.0},{"id":"酒-12","kind":"酒","sheet":"酒","row":12,"selected":false,"boost":false,"level":5,"name":"新豐","basePrice":79.0,"ingredients":[{"name":"水稻","qty":3.0,"category":"種田","level":4,"source":"酒!S12"},{"name":"油菜","qty":6.0,"category":"種田","level":5,"source":"酒!Y12"},{"name":"青瓷","qty":1.0,"category":"瓷器","level":5,"source":"酒!AM12"},{"name":"青礞","qty":1.0,"category":"挖礦","level":5,"source":"酒!AS12"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA12"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC12"}],"hourlyRate":0.0},{"id":"酒-13","kind":"酒","sheet":"酒","row":13,"selected":false,"boost":false,"level":4,"name":"瓜果","basePrice":0.0,"ingredients":[{"name":"水稻","qty":3.0,"category":"種田","level":4,"source":"酒!S13"},{"name":"寒瓜","qty":6.0,"category":"種田","level":4,"source":"酒!U13"},{"name":"青釉","qty":1.0,"category":"瓷器","level":4,"source":"酒!AM13"},{"name":"獨山","qty":1.0,"category":"挖礦","level":4,"source":"酒!AU13"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA13"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC13"}],"hourlyRate":0.0},{"id":"酒-14","kind":"酒","sheet":"酒","row":14,"selected":false,"boost":false,"level":3,"name":"桑落","basePrice":0.0,"ingredients":[{"name":"玉米","qty":3.0,"category":"種田","level":1,"source":"酒!K14"},{"name":"棉花","qty":6.0,"category":"種田","level":3,"source":"酒!Q14"},{"name":"藍玉","qty":1.0,"category":"瓷器","level":3,"source":"酒!AM14"},{"name":"獨山藍","qty":1.0,"category":"挖礦","level":3,"source":"酒!AW14"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA14"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC14"}],"hourlyRate":0.0},{"id":"酒-15","kind":"酒","sheet":"酒","row":15,"selected":false,"boost":false,"level":2,"name":"包穀","basePrice":69.0,"ingredients":[{"name":"玉米","qty":3.0,"category":"種田","level":1,"source":"酒!K15"},{"name":"梨花","qty":6.0,"category":"種田","level":2,"source":"酒!O15"},{"name":"白釉","qty":1.0,"category":"瓷器","level":2,"source":"酒!AM15"},{"name":"酒香","qty":1.0,"category":"挖礦","level":2,"source":"酒!AY15"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA15"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC15"}],"hourlyRate":0.0},{"id":"酒-16","kind":"酒","sheet":"酒","row":16,"selected":false,"boost":false,"level":1,"name":"麥酒","basePrice":66.0,"ingredients":[{"name":"玉米","qty":3.0,"category":"種田","level":1,"source":"酒!K16"},{"name":"小麥","qty":6.0,"category":"種田","level":1,"source":"酒!M16"},{"name":"木理","qty":1.0,"category":"瓷器","level":1,"source":"酒!AM16"},{"name":"石頭","qty":1.0,"category":"挖礦","level":1,"source":"酒!BA16"},{"name":"木頭","qty":1.0,"category":"伐木","level":1,"source":"酒!BC16"}],"hourlyRate":0.0}],"categoryOrder":["菜餚","酒","種田","捕魚","狩獵","伐木","挖礦","瓷器","其他"],"formulaNotes":[{"title":"1. 先確認剩餘時間","text":"系統會自動抓取目前時間，並換算距離下次更新還剩幾小時。若你想自行估算，也可以開啟手動輸入，直接填入剩餘小時。"},{"title":"2. 輸入消耗情況","text":"每個品項只要填「每小時大約會賣掉多少份」。例如每小時會消耗 6.15 份，就填 6.15；系統會自動換算到本輪結束前的總需求。"},{"title":"3. 材料需求會自動整理","text":"只要有勾選品項，系統就會依照消耗情況，自動換算出需要多少材料。若同一種材料被多個品項使用，系統也會自動幫你合併統計。"},{"title":"4. 1.2 倍價格的用途(熱門菜)","text":"勾選 1.2 倍後，系統會自動調整該品項的售價，並重新計算收入估算。這個選項只影響收入，不會改變材料需求量。"},{"title":"5. 建議操作流程","text":"建議順序是：先勾選品項 → 再填消耗情況 → 檢查剩餘小時 → 最後查看總覽與材料明細，並且點選「儲存目前設定」可以保留所選的菜餚與酒品。"}]};
+    const STORAGE_KEY = 'yanyun_sale_calc_state_v3_hourly_only';
     const state = {
       recipes: structuredClone(APP_DATA.recipes),
       manualHoursEnabled: false,
@@ -343,8 +352,17 @@
       activeTab: 'overview'
     };
 
+    function initRecipeFields() {
+      state.recipes.forEach(r => {
+        r.saleMode = 'hourly';
+        if (r.hourlyRate == null || Number.isNaN(Number(r.hourlyRate))) r.hourlyRate = 0;
+      });
+    }
+    initRecipeFields();
+
     const nf0 = new Intl.NumberFormat('zh-Hant', { maximumFractionDigits: 0 });
-    const nf2 = new Intl.NumberFormat('zh-Hant', { maximumFractionDigits: 2 });
+    const nf1 = new Intl.NumberFormat('zh-Hant', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const nf2 = new Intl.NumberFormat('zh-Hant', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const money = new Intl.NumberFormat('zh-Hant', { maximumFractionDigits: 0 });
 
     function pad(n) { return String(n).padStart(2, '0'); }
@@ -369,11 +387,19 @@
       return autoHours();
     }
     function roundExcel(v) { return Math.round(Number(v || 0)); }
-    function adjustedPrice(r) { return r.boost ? roundExcel(r.basePrice * 1.2) : Number(r.basePrice || 0); }
-    function outputQty(r, hours = currentHours()) { return r.selected ? Number(r.proficiency || 0) * RATE * hours : 0; }
+    function round1(v) { return Math.round(Number(v || 0) * 10) / 10; }
+    function round2(v) { return Math.round(Number(v || 0) * 100) / 100; }
+    function adjustedPrice(r) { return r.boost ? round1(r.basePrice * 1.2) : round1(r.basePrice || 0); }
+    function hourlyRate(r) { return round2(Math.max(0, Number(r.hourlyRate || 0))); }
+    function hourlyInputValue(r) { return Math.max(0, Number(r.hourlyRate || 0)); }
+    function calcModeName(r) { return '每小時輸入'; }
+    function calcFormulaText(r, hours = currentHours()) {
+      return `消耗 ${nf2.format(hourlyRate(r))}/小時 × ${nf2.format(hours)} 小時`;
+    }
+    function outputQty(r, hours = currentHours()) { return r.selected ? hourlyRate(r) * hours : 0; }
     function materialQty(r, ing, hours = currentHours()) {
       if (!r.selected) return 0;
-      const raw = Number(r.proficiency || 0) * RATE * hours * Number(ing.qty || 0);
+      const raw = hourlyRate(r) * hours * Number(ing.qty || 0);
       return raw > 0 ? Math.ceil(raw) : 0;
     }
     function recipeRevenue(r, hours = currentHours()) { return outputQty(r, hours) * adjustedPrice(r); }
@@ -388,7 +414,7 @@
     }
     function saveState() {
       const payload = {
-        recipes: state.recipes.map(r => ({ id: r.id, selected: r.selected, boost: r.boost, basePrice: r.basePrice, proficiency: r.proficiency })),
+        recipes: state.recipes.map(r => ({ id: r.id, selected: r.selected, boost: r.boost, basePrice: r.basePrice, hourlyRate: r.hourlyRate })),
         manualHoursEnabled: state.manualHoursEnabled,
         manualHours: state.manualHours
       };
@@ -407,20 +433,23 @@
           r.selected = !!s.selected;
           r.boost = !!s.boost;
           r.basePrice = Number(s.basePrice || 0);
-          r.proficiency = Number(s.proficiency || 0);
+          r.saleMode = 'hourly';
+          r.hourlyRate = s.hourlyRate == null ? 0 : Number(s.hourlyRate || 0);
         });
+        initRecipeFields();
         state.manualHoursEnabled = !!saved.manualHoursEnabled;
         state.manualHours = saved.manualHours == null ? null : Number(saved.manualHours);
       } catch (err) { console.warn('Cannot load saved state', err); }
     }
     function resetState() {
       state.recipes = structuredClone(APP_DATA.recipes);
+      initRecipeFields();
       state.manualHoursEnabled = false;
       state.manualHours = null;
       localStorage.removeItem(STORAGE_KEY);
       syncControls();
       render();
-      toast('已重置為 Excel 預設');
+      toast('已重置為預設');
     }
     function filteredRecipes(kind = null) {
       const q = state.search.trim().toLowerCase();
@@ -468,19 +497,19 @@
       return `<tr class="${r.selected ? 'selected-row' : ''}" data-id="${esc(r.id)}">
         <td class="nowrap"><label class="switch"><input type="checkbox" class="js-selected" ${r.selected ? 'checked' : ''}><span class="slider"></span></label></td>
         <td class="nowrap"><label class="switch"><input type="checkbox" class="js-boost" ${r.boost ? 'checked' : ''}><span class="slider"></span></label></td>
-        <td><span class="pill muted">Lv.${esc(r.level)}</span></td>
+        <td class="center"><span class="pill muted">Lv.${esc(r.level)}</span></td>
         <td><strong>${esc(r.name)}</strong><div class="small">${esc(r.kind)} · ${esc(r.sheet)}列${esc(r.row)}</div></td>
-        <td><input type="number" class="js-price" min="0" step="1" value="${esc(r.basePrice)}"></td>
-        <td class="right highlight">${nf0.format(adjustedPrice(r))}</td>
-        <td><input type="number" class="js-prof" min="0" step="1" value="${esc(r.proficiency)}"></td>
-        <td class="right">${nf2.format(out)}</td>
-        <td class="right">${money.format(rev)}</td>
+        <td class="center"><input type="number" class="js-price" min="0" step="1" value="${esc(r.basePrice)}"></td>
+        <td class="num highlight">${nf1.format(adjustedPrice(r))}</td>
+        <td class="center"><input type="number" class="js-hourly rate-input" min="0" step="0.01" value="${esc(Number(hourlyInputValue(r)).toFixed(2))}"></td>
+        <td class="num">${nf2.format(out)}</td>
+        <td class="num">${money.format(rev)}</td>
         <td><div class="ingredients">${ingTags}</div></td>
         <td><button class="ghost js-detail">查看</button></td>
       </tr>`;
     }
     function renderTable(kind, headId, bodyId) {
-      document.getElementById(headId).innerHTML = `<tr><th>選用</th><th>1.2倍</th><th>等級</th><th>品名</th><th>原價</th><th>調整價</th><th>備席熟練度</th><th>預計販售量</th><th>估算收入</th><th>配方</th><th>操作</th></tr>`;
+      document.getElementById(headId).innerHTML = `<tr><th class="center">選用</th><th class="center">1.2倍</th><th class="center">等級</th><th>品名</th><th class="center">原價</th><th class="center">調整價</th><th class="center">消耗情況</th><th class="center">預計販售量</th><th class="center">估算收入</th><th class="center">配方</th><th class="center">詳情</th></tr>`;
       const list = filteredRecipes(kind);
       document.getElementById(bodyId).innerHTML = list.length ? list.map(rowHtml).join('') : `<tr><td colspan="11"><div class="empty">找不到符合搜尋條件的品項</div></td></tr>`;
     }
@@ -498,8 +527,8 @@
           <h3>${esc(r.name)} <span class="pill ${r.kind === '菜餚' ? 'good' : 'warn'}">${esc(r.kind)}</span></h3>
           <div class="pill-row">
             <span class="pill muted">Lv.${r.level}</span>
-            <span class="pill">熟練 ${nf0.format(r.proficiency || 0)}</span>
-            <span class="pill">調整價 ${nf0.format(adjustedPrice(r))}</span>
+            <span class="pill">消耗 ${nf2.format(hourlyRate(r))}/小時</span>
+            <span class="pill">調整價 ${nf1.format(adjustedPrice(r))}</span>
           </div>
           <p class="detail">預計販售 <span class="highlight">${nf2.format(out)}</span>，估算收入 <span class="highlight">${money.format(rev)}</span>。</p>
           <div class="ingredients">${r.ingredients.map(i => `<span class="tag">${esc(i.name)}×${nf0.format(i.qty)}</span>`).join('')}</div>
@@ -512,9 +541,9 @@
         byCat.get(m.category).push(m);
       });
       const catHtml = APP_DATA.categoryOrder.filter(c => byCat.has(c)).map(cat => {
-        const rows = byCat.get(cat).map(m => `<tr><td>${m.level ? `<span class="pill muted">Lv.${m.level}</span>` : ''}</td><td><strong>${esc(m.name)}</strong><div class="small">${m.sources.map(s => `${s.recipe} ${nf0.format(s.qty)}`).join('、')}</div></td><td>${nf0.format(m.qty)}</td></tr>`).join('');
+        const rows = byCat.get(cat).map(m => `<tr><td class="center">${m.level ? `<span class="pill muted">Lv.${m.level}</span>` : ''}</td><td><strong>${esc(m.name)}</strong><div class="small">${m.sources.map(s => `${s.recipe} ${nf0.format(s.qty)}`).join('、')}</div></td><td class="num">${nf0.format(m.qty)}</td></tr>`).join('');
         const total = byCat.get(cat).reduce((s,m)=>s+m.qty,0);
-        return `<div class="category-card"><div class="category-head"><strong>${esc(cat)}</strong><span class="pill good">${nf0.format(total)}</span></div><table class="mini-table"><thead><tr><th>等級</th><th>材料</th><th>需求</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        return `<div class="category-card"><div class="category-head"><strong>${esc(cat)}</strong><span class="pill good">${nf0.format(total)}</span></div><table class="mini-table"><thead><tr><th class="center">等級</th><th>材料</th><th class="center">需求</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       }).join('');
       document.getElementById('categorySummary').innerHTML = catHtml || '<div class="empty">目前沒有材料需求。</div>';
     }
@@ -528,9 +557,9 @@
       const content = recipes.map(r => {
         const rows = r.ingredients.map(i => {
           const need = materialQty(r, i);
-          return `<tr><td>${esc(i.category)}</td><td>${i.level ? 'Lv.' + i.level : ''}</td><td><strong>${esc(i.name)}</strong></td><td>${nf0.format(i.qty)}</td><td>${nf0.format(need)}</td></tr>`;
+          return `<tr><td>${esc(i.category)}</td><td class="center">${i.level ? 'Lv.' + i.level : ''}</td><td><strong>${esc(i.name)}</strong></td><td class="num">${nf0.format(i.qty)}</td><td class="num">${nf0.format(need)}</td></tr>`;
         }).join('');
-        return `<div class="card"><h3>${esc(r.name)} <span class="pill muted">${esc(r.kind)}</span></h3><p class="detail">販售量：<span class="highlight">${nf2.format(outputQty(r))}</span>；公式：熟練度 ${nf0.format(r.proficiency || 0)} × 0.009 × ${nf2.format(currentHours())} 小時。</p><div class="table-wrap"><table class="mini-table"><thead><tr><th>類別</th><th>等級</th><th>材料</th><th>單份數量</th><th>需求量</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+        return `<div class="card"><h3>${esc(r.name)} <span class="pill muted">${esc(r.kind)}</span></h3><p class="detail">販售量：<span class="highlight">${nf2.format(outputQty(r))}</span>；公式：${esc(calcFormulaText(r))}。</p><div class="table-wrap"><table class="mini-table"><thead><tr><th>類別</th><th class="center">等級</th><th>材料</th><th class="center">單份數量</th><th class="center">需求量</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
       }).join('');
       document.getElementById('detailContent').innerHTML = content || '<div class="empty">尚未選用品項；若要查看全部，可在搜尋欄輸入材料或品名。</div>';
     }
@@ -576,7 +605,7 @@
         if (e.target.classList.contains('js-selected')) r.selected = e.target.checked;
         if (e.target.classList.contains('js-boost')) r.boost = e.target.checked;
         if (e.target.classList.contains('js-price')) r.basePrice = Number(e.target.value || 0);
-        if (e.target.classList.contains('js-prof')) r.proficiency = Number(e.target.value || 0);
+        if (e.target.classList.contains('js-hourly')) r.hourlyRate = Number(e.target.value || 0);
         render();
       });
       document.body.addEventListener('click', e => {
@@ -611,8 +640,8 @@
     }
     function openDetail(r) {
       document.getElementById('modalTitle').textContent = `${r.name} 配方與計算`;
-      const rows = r.ingredients.map(i => `<tr><td>${esc(i.category)}</td><td>${i.level ? 'Lv.' + i.level : ''}</td><td><strong>${esc(i.name)}</strong></td><td>${nf0.format(i.qty)}</td><td>${nf0.format(materialQty(r, i))}</td><td class="small">${esc(i.source)}</td></tr>`).join('');
-      document.getElementById('modalContent').innerHTML = `<div class="note">選用：${r.selected ? '是' : '否'}；1.2倍：${r.boost ? '是' : '否'}；備席熟練度：${nf0.format(r.proficiency || 0)}；剩餘小時：${nf2.format(currentHours())}。</div><div class="table-wrap" style="margin-top:12px"><table class="mini-table"><thead><tr><th>類別</th><th>等級</th><th>材料</th><th>單份數量</th><th>需求量</th><th>來源</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      const rows = r.ingredients.map(i => `<tr><td>${esc(i.category)}</td><td class="center">${i.level ? 'Lv.' + i.level : ''}</td><td><strong>${esc(i.name)}</strong></td><td class="num">${nf0.format(i.qty)}</td><td class="num">${nf0.format(materialQty(r, i))}</td></tr>`).join('');
+      document.getElementById('modalContent').innerHTML = `<div class="note">選用：${r.selected ? '是' : '否'}；1.2倍：${r.boost ? '是' : '否'}；消耗情況：${nf2.format(hourlyRate(r))}/小時；剩餘小時：${nf2.format(currentHours())}；預計販售：${nf2.format(outputQty(r))}。</div><div class="table-wrap" style="margin-top:12px"><table class="mini-table"><thead><tr><th>類別</th><th class="center">等級</th><th>材料</th><th class="center">單份數量</th><th class="center">需求量</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       document.getElementById('modalBackdrop').classList.add('show');
     }
     function closeModal() { document.getElementById('modalBackdrop').classList.remove('show'); }
@@ -622,9 +651,9 @@
       lines.push(['類別','等級','品名','需求量'].join(','));
       a.materials.forEach(m => lines.push([m.category, m.level || '', m.name, m.qty].map(csvCell).join(',')));
       lines.push('');
-      lines.push(['品項類別','品項','預計販售量','調整價','估算收入','熟練度'].join(','));
-      a.selectedRecipes.forEach(r => lines.push([r.kind, r.name, nf2.format(outputQty(r)), adjustedPrice(r), nf2.format(recipeRevenue(r)), r.proficiency].map(csvCell).join(',')));
-      downloadText(lines.join('\n'), '燕雲家業販售計算結果.csv', 'text/csv;charset=utf-8');
+      lines.push(['品項類別','品項','消耗情況/小時','預計販售量','調整價','估算收入'].join(','));
+      a.selectedRecipes.forEach(r => lines.push([r.kind, r.name, nf2.format(hourlyRate(r)), nf2.format(outputQty(r)), adjustedPrice(r), nf2.format(recipeRevenue(r))].map(csvCell).join(',')));
+      downloadText(lines.join('\n'), '燕雲家業販售計算結果_每小時版.csv', 'text/csv;charset=utf-8');
     }
     function csvCell(v) {
       const s = String(v ?? '');
